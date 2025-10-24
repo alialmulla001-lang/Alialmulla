@@ -1,0 +1,1751 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مراقبة الأرض - مراقبة التصحر والغطاء النباتي</title>
+    <meta name="description" content="موقع متقدم لمراقبة التصحر والغطاء النباتي عبر الأقمار الصناعية مع تنبؤات الذكاء الاصطناعي">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <style>
+        /* ===== CSS Reset & Base Styles ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Color System */
+            --primary-50: #F0F9FF;
+            --primary-500: #0284C7;
+            --primary-900: #0C2D48;
+            --green-vegetation: #22C55E;
+            --green-light: #BBF7D0;
+            --yellow-desert: #FBBF24;
+            --yellow-light: #FEF3C7;
+            --blue-ocean: #0EA5E9;
+            --red-warning: #EF4444;
+            --neutral-50: #FAFAFA;
+            --neutral-100: #F4F4F5;
+            --neutral-500: #71717A;
+            --neutral-700: #3F3F46;
+            --neutral-900: #18181B;
+            
+            /* Typography */
+            --font-arabic: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --font-english: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            
+            /* Spacing */
+            --space-xs: 8px;
+            --space-sm: 16px;
+            --space-md: 24px;
+            --space-lg: 32px;
+            --space-xl: 48px;
+            --space-xxl: 64px;
+            
+            /* Border Radius */
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
+            
+            /* Transitions */
+            --transition-fast: 0.15s ease-out;
+            --transition-normal: 0.3s ease-out;
+            --transition-slow: 0.5s ease-out;
+        }
+
+        body {
+            font-family: var(--font-arabic);
+            background: linear-gradient(135deg, #0C2D48 0%, #0284C7 100%);
+            min-height: 100vh;
+            color: var(--neutral-900);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ===== Header ===== */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: var(--space-sm) 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--space-md);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-lg);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-900);
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.2));
+        }
+
+        .nav {
+            display: flex;
+            gap: var(--space-xs);
+        }
+
+        .nav-btn {
+            padding: var(--space-xs) var(--space-sm);
+            border: none;
+            background: transparent;
+            color: var(--neutral-700);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition-normal);
+            font-weight: 500;
+        }
+
+        .nav-btn:hover,
+        .nav-btn.active {
+            background: var(--primary-500);
+            color: white;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: var(--space-sm);
+            align-items: center;
+        }
+
+        .lang-toggle,
+        .settings-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: var(--space-xs) var(--space-sm);
+            border: 1px solid var(--neutral-200);
+            background: white;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition-normal);
+            font-size: 0.875rem;
+        }
+
+        .lang-toggle:hover,
+        .settings-btn:hover {
+            border-color: var(--primary-500);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* ===== Main Content ===== */
+        .main {
+            padding: var(--space-lg) 0;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: var(--space-xl);
+            align-items: start;
+        }
+
+        /* ===== Globe Section ===== */
+        .globe-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            box-shadow: var(--shadow-xl);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .globe-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-md);
+        }
+
+        .globe-controls {
+            display: flex;
+            gap: var(--space-xs);
+        }
+
+        .control-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: var(--space-xs) var(--space-sm);
+            border: 1px solid var(--neutral-200);
+            background: white;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition-normal);
+            font-size: 0.875rem;
+        }
+
+        .control-btn.active {
+            background: var(--primary-500);
+            color: white;
+            border-color: var(--primary-500);
+        }
+
+        .control-btn:hover {
+            border-color: var(--primary-500);
+        }
+
+        .globe-wrapper {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            background: #000;
+            box-shadow: var(--shadow-md);
+        }
+
+        #globeCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .globe-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            z-index: 10;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto var(--space-sm);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .globe-info-panel {
+            position: absolute;
+            top: var(--space-md);
+            right: var(--space-md);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-md);
+            padding: var(--space-md);
+            box-shadow: var(--shadow-lg);
+            min-width: 280px;
+            max-width: 350px;
+        }
+
+        .info-content {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-xs);
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-xs) 0;
+            border-bottom: 1px solid var(--neutral-100);
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-item label {
+            font-weight: 600;
+            color: var(--neutral-700);
+        }
+
+        /* ===== Time Panel ===== */
+        .time-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            box-shadow: var(--shadow-xl);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            height: fit-content;
+            position: sticky;
+            top: calc(var(--space-lg) + 80px);
+        }
+
+        .time-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-md);
+        }
+
+        .time-buttons {
+            display: flex;
+            gap: var(--space-xs);
+        }
+
+        .time-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: var(--primary-500);
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition-normal);
+        }
+
+        .time-btn:hover {
+            background: var(--primary-700);
+            transform: scale(1.05);
+        }
+
+        .time-slider-container {
+            margin-bottom: var(--space-md);
+        }
+
+        .time-label {
+            display: block;
+            margin-bottom: var(--space-xs);
+            font-weight: 600;
+            color: var(--neutral-700);
+        }
+
+        .time-slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--neutral-200);
+            outline: none;
+            -webkit-appearance: none;
+            margin-bottom: var(--space-xs);
+        }
+
+        .time-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-500);
+            cursor: pointer;
+        }
+
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: var(--neutral-500);
+        }
+
+        .animation-controls {
+            margin-bottom: var(--space-lg);
+        }
+
+        .speed-controls {
+            display: flex;
+            gap: var(--space-xs);
+            margin-top: var(--space-xs);
+        }
+
+        .speed-btn {
+            padding: var(--space-xs);
+            border: 1px solid var(--neutral-200);
+            background: white;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: var(--transition-normal);
+        }
+
+        .speed-btn.active {
+            background: var(--primary-500);
+            color: white;
+            border-color: var(--primary-500);
+        }
+
+        .data-sources,
+        .ai-predictions {
+            margin-bottom: var(--space-lg);
+        }
+
+        .source-list,
+        .prediction-controls {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-xs);
+            margin-top: var(--space-xs);
+        }
+
+        .source-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: var(--space-xs);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition-normal);
+        }
+
+        .source-item:hover,
+        .source-item.active {
+            background: var(--neutral-50);
+        }
+
+        .prediction-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: var(--space-xs);
+            border: 1px solid var(--neutral-200);
+            background: white;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition-normal);
+            font-size: 0.875rem;
+        }
+
+        .prediction-btn.active {
+            background: var(--primary-500);
+            color: white;
+            border-color: var(--primary-500);
+        }
+
+        .accuracy-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--neutral-200);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: var(--space-xs) 0;
+        }
+
+        .accuracy-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--green-vegetation), var(--primary-500));
+            transition: width 0.5s ease;
+        }
+
+        .accuracy-text {
+            font-size: 0.75rem;
+            color: var(--neutral-500);
+        }
+
+        /* ===== Statistics Section ===== */
+        .stats-section {
+            padding: var(--space-xl) 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .stats-section h2 {
+            text-align: center;
+            color: white;
+            margin-bottom: var(--space-xl);
+            font-size: 2rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--space-lg);
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: var(--transition-normal);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary-500), var(--blue-ocean));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: var(--space-md);
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-900);
+            margin-bottom: var(--space-xs);
+        }
+
+        .stat-label {
+            color: var(--neutral-700);
+            font-weight: 600;
+            margin-bottom: var(--space-xs);
+        }
+
+        .stat-change {
+            font-size: 0.875rem;
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+        }
+
+        .stat-change.positive {
+            background: var(--green-light);
+            color: var(--green-vegetation);
+        }
+
+        .stat-change.negative {
+            background: #FEE2E2;
+            color: var(--red-warning);
+        }
+
+        .stat-change.neutral {
+            background: var(--neutral-100);
+            color: var(--neutral-500);
+        }
+
+        /* ===== Responsive Design ===== */
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: var(--space-lg);
+            }
+            
+            .time-panel {
+                position: static;
+                order: -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: var(--space-sm);
+            }
+            
+            .nav {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .globe-wrapper {
+                height: 400px;
+            }
+            
+            .globe-info-panel {
+                position: static;
+                margin-top: var(--space-md);
+                min-width: auto;
+                max-width: none;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 var(--space-sm);
+            }
+            
+            .globe-section,
+            .time-panel {
+                padding: var(--space-md);
+            }
+            
+            .globe-wrapper {
+                height: 300px;
+            }
+            
+            .stat-number {
+                font-size: 2rem;
+            }
+        }
+
+        /* ===== LTR Support ===== */
+        [dir="ltr"] {
+            font-family: var(--font-english);
+        }
+
+        [dir="ltr"] .main-content {
+            direction: ltr;
+        }
+
+        [dir="ltr"] .time-panel {
+            direction: ltr;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-section">
+                    <h1 class="logo">
+                        <span class="logo-icon">🌍</span>
+                        <span data-translate="site-title">مراقبة الأرض</span>
+                    </h1>
+                </div>
+                
+                <nav class="nav">
+                    <button class="nav-btn active" data-section="home" data-translate="nav-home">الرئيسية</button>
+                    <button class="nav-btn" data-section="analysis" data-translate="nav-analysis">التحليلات</button>
+                    <button class="nav-btn" data-section="predictions" data-translate="nav-predictions">التنبؤات</button>
+                    <button class="nav-btn" data-section="reports" data-translate="nav-reports">التقارير</button>
+                </nav>
+                
+                <div class="header-actions">
+                    <button class="lang-toggle" id="langToggle">
+                        <span class="lang-flag">🇸🇦</span>
+                        <span data-translate="lang-text">English</span>
+                    </button>
+                    <button class="settings-btn" id="settingsBtn">
+                        <i data-lucide="settings"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <div class="main-content">
+                <!-- Globe Section -->
+                <section class="globe-section">
+                    <div class="globe-container">
+                        <div class="globe-header">
+                            <h2 data-translate="globe-title">خريطة الأرض التفاعلية</h2>
+                            <div class="globe-controls">
+                                <button class="control-btn active" data-layer="vegetation">
+                                    <i data-lucide="leaf"></i>
+                                    <span data-translate="layer-vegetation">الغطاء النباتي</span>
+                                </button>
+                                <button class="control-btn" data-layer="desertification">
+                                    <i data-lucide="thermometer"></i>
+                                    <span data-translate="layer-desertification">التصحر</span>
+                                </button>
+                                <button class="control-btn" data-layer="combined">
+                                    <i data-lucide="layers"></i>
+                                    <span data-translate="layer-combined">مدمج</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="globe-wrapper">
+                            <canvas id="globeCanvas"></canvas>
+                            <div class="globe-loading" id="globeLoading">
+                                <div class="loading-spinner"></div>
+                                <p data-translate="loading-text">جاري تحميل بيانات الأقمار الصناعية...</p>
+                            </div>
+                        </div>
+                        
+                        <div class="globe-info-panel" id="infoPanel" style="display: none;">
+                            <h3 data-translate="info-panel-title">معلومات المنطقة</h3>
+                            <div class="info-content">
+                                <div class="info-item">
+                                    <label data-translate="info-location">الموقع:</label>
+                                    <span id="locationInfo">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <label data-translate="info-vegetation">الغطاء النباتي:</label>
+                                    <span id="vegetationInfo">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <label data-translate="info-desertification">مؤشر التصحر:</label>
+                                    <span id="desertificationInfo">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <label data-translate="info-change">التغيير السنوي:</label>
+                                    <span id="changeInfo">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Time Control Panel -->
+                <aside class="time-panel">
+                    <div class="time-header">
+                        <h3 data-translate="time-title">التحكم الزمني</h3>
+                        <div class="time-buttons">
+                            <button class="time-btn play-btn" id="playBtn">
+                                <i data-lucide="play"></i>
+                            </button>
+                            <button class="time-btn pause-btn" id="pauseBtn" style="display: none;">
+                                <i data-lucide="pause"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="time-controls">
+                        <div class="time-slider-container">
+                            <label class="time-label" data-translate="time-year">السنة:</label>
+                            <input type="range" id="timeSlider" class="time-slider" min="2000" max="2035" value="2025" step="1">
+                            <div class="time-display">
+                                <span class="current-year" id="currentYear">2025</span>
+                                <span class="year-range" id="yearRange">2000 - 2035</span>
+                            </div>
+                        </div>
+                        
+                        <div class="animation-controls">
+                            <label data-translate="animation-speed">سرعة التحريك:</label>
+                            <div class="speed-controls">
+                                <button class="speed-btn" data-speed="0.5">0.5x</button>
+                                <button class="speed-btn active" data-speed="1">1x</button>
+                                <button class="speed-btn" data-speed="2">2x</button>
+                                <button class="speed-btn" data-speed="4">4x</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="data-sources">
+                        <h4 data-translate="data-sources-title">مصادر البيانات</h4>
+                        <div class="source-list">
+                            <div class="source-item active" data-source="nasa">
+                                <i data-lucide="satellite"></i>
+                                <span>NASA MODIS</span>
+                            </div>
+                            <div class="source-item" data-source="copernicus">
+                                <i data-lucide="globe"></i>
+                                <span>Copernicus</span>
+                            </div>
+                            <div class="source-item" data-source="gee">
+                                <i data-lucide="layers"></i>
+                                <span>Google Earth Engine</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="ai-predictions">
+                        <h4 data-translate="ai-predictions-title">تنبؤات الذكاء الاصطناعي</h4>
+                        <div class="prediction-controls">
+                            <button class="prediction-btn active" data-pred="vegetation">
+                                <i data-lucide="trending-up"></i>
+                                <span data-translate="pred-vegetation">نمو النباتات</span>
+                            </button>
+                            <button class="prediction-btn" data-pred="desertification">
+                                <i data-lucide="trending-down"></i>
+                                <span data-translate="pred-desertification">توسع التصحر</span>
+                            </button>
+                        </div>
+                        <div class="prediction-accuracy">
+                            <div class="accuracy-bar">
+                                <div class="accuracy-fill" style="width: 94%"></div>
+                            </div>
+                            <span class="accuracy-text">دقة التوقع: 94%</span>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <!-- Statistics Dashboard -->
+    <section class="stats-section">
+        <div class="container">
+            <h2 data-translate="stats-title">إحصائيات سريعة</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i data-lucide="leaf"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number" id="vegetationCoverage">78.2%</h3>
+                        <p class="stat-label" data-translate="stat-vegetation">الغطاء النباتي العالمي</p>
+                        <span class="stat-change positive">+2.1% من العام الماضي</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i data-lucide="thermometer"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number" id="desertificationRisk">34.7%</h3>
+                        <p class="stat-label" data-translate="stat-desertification">المناطق المعرضة للتصحر</p>
+                        <span class="stat-change negative">+1.8% من العام الماضي</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i data-lucide="satellite"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number" id="dataPoints">2.4M</h3>
+                        <p class="stat-label" data-translate="stat-data">نقطة بيانات من الأقمار</p>
+                        <span class="stat-change neutral">محدث يومياً</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i data-lucide="brain"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number" id="aiAccuracy">94%</h3>
+                        <p class="stat-label" data-translate="stat-ai">دقة الذكاء الاصطناعي</p>
+                        <span class="stat-change positive">+3% من الشهر الماضي</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // ===== Translation Data =====
+        const translations = {
+            ar: {
+                "site-title": "مراقبة الأرض",
+                "nav-home": "الرئيسية",
+                "nav-analysis": "التحليلات", 
+                "nav-predictions": "التنبؤات",
+                "nav-reports": "التقارير",
+                "globe-title": "خريطة الأرض التفاعلية",
+                "layer-vegetation": "الغطاء النباتي",
+                "layer-desertification": "التصحر",
+                "layer-combined": "مدمج",
+                "loading-text": "جاري تحميل بيانات الأقمار الصناعية...",
+                "info-panel-title": "معلومات المنطقة",
+                "info-location": "الموقع:",
+                "info-vegetation": "الغطاء النباتي:",
+                "info-desertification": "مؤشر التصحر:",
+                "info-change": "التغيير السنوي:",
+                "time-title": "التحكم الزمني",
+                "time-year": "السنة:",
+                "animation-speed": "سرعة التحريك:",
+                "data-sources-title": "مصادر البيانات",
+                "ai-predictions-title": "تنبؤات الذكاء الاصطناعي",
+                "pred-vegetation": "نمو النباتات",
+                "pred-desertification": "توسع التصحر",
+                "stats-title": "إحصائيات سريعة",
+                "stat-vegetation": "الغطاء النباتي العالمي",
+                "stat-desertification": "المناطق المعرضة للتصحر",
+                "stat-data": "نقطة بيانات من الأقمار",
+                "stat-ai": "دقة الذكاء الاصطناعي",
+                "lang-text": "English",
+                "play": "تشغيل",
+                "pause": "إيقاف"
+            },
+            en: {
+                "site-title": "Earth Monitoring",
+                "nav-home": "Home",
+                "nav-analysis": "Analysis",
+                "nav-predictions": "Predictions", 
+                "nav-reports": "Reports",
+                "globe-title": "Interactive Earth Map",
+                "layer-vegetation": "Vegetation",
+                "layer-desertification": "Desertification",
+                "layer-combined": "Combined",
+                "loading-text": "Loading satellite data...",
+                "info-panel-title": "Region Information",
+                "info-location": "Location:",
+                "info-vegetation": "Vegetation:",
+                "info-desertification": "Desertification Index:",
+                "info-change": "Annual Change:",
+                "time-title": "Time Control",
+                "time-year": "Year:",
+                "animation-speed": "Animation Speed:",
+                "data-sources-title": "Data Sources",
+                "ai-predictions-title": "AI Predictions",
+                "pred-vegetation": "Plant Growth",
+                "pred-desertification": "Desert Expansion",
+                "stats-title": "Quick Statistics",
+                "stat-vegetation": "Global Vegetation Cover",
+                "stat-desertification": "Desert Risk Areas",
+                "stat-data": "Satellite Data Points",
+                "stat-ai": "AI Accuracy",
+                "lang-text": "العربية",
+                "play": "Play",
+                "pause": "Pause"
+            }
+        };
+
+        // ===== Language Manager =====
+        class LanguageManager {
+            constructor() {
+                this.currentLang = 'ar';
+                this.translations = translations;
+                this.init();
+            }
+
+            init() {
+                this.updateTranslations();
+                this.setupEventListeners();
+            }
+
+            switchLanguage() {
+                this.currentLang = this.currentLang === 'ar' ? 'en' : 'ar';
+                document.documentElement.lang = this.currentLang;
+                document.documentElement.dir = this.currentLang === 'ar' ? 'rtl' : 'ltr';
+                this.updateTranslations();
+            }
+
+            updateTranslations() {
+                const elements = document.querySelectorAll('[data-translate]');
+                elements.forEach(element => {
+                    const key = element.getAttribute('data-translate');
+                    const translation = this.translations[this.currentLang][key];
+                    if (translation) {
+                        element.textContent = translation;
+                    }
+                });
+            }
+
+            setupEventListeners() {
+                const langToggle = document.getElementById('langToggle');
+                if (langToggle) {
+                    langToggle.addEventListener('click', () => this.switchLanguage());
+                }
+            }
+        }
+
+        // ===== Globe Renderer =====
+        class GlobeRenderer {
+            constructor() {
+                this.scene = null;
+                this.camera = null;
+                this.renderer = null;
+                this.earth = null;
+                this.controls = null;
+                this.isAnimating = true;
+                this.currentYear = 2025;
+                this.currentLayer = 'vegetation';
+                
+                this.init();
+            }
+
+            init() {
+                this.setupScene();
+                this.createEarth();
+                this.setupControls();
+                this.animate();
+                this.setupEventListeners();
+                
+                // Hide loading after 3 seconds
+                setTimeout(() => {
+                    const loading = document.getElementById('globeLoading');
+                    if (loading) loading.style.display = 'none';
+                }, 3000);
+            }
+
+            setupScene() {
+                const canvas = document.getElementById('globeCanvas');
+                const container = canvas.parentElement;
+                
+                this.scene = new THREE.Scene();
+                this.camera = new THREE.PerspectiveCamera(45, container.offsetWidth / container.offsetHeight, 0.1, 1000);
+                this.renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
+                
+                this.renderer.setSize(container.offsetWidth, container.offsetHeight);
+                this.renderer.setPixelRatio(window.devicePixelRatio);
+                this.renderer.shadowMap.enabled = true;
+                this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                
+                // Lighting
+                const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+                this.scene.add(ambientLight);
+                
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+                directionalLight.position.set(5, 3, 5);
+                directionalLight.castShadow = true;
+                this.scene.add(directionalLight);
+                
+                // Position camera
+                this.camera.position.z = 5;
+            }
+
+            createEarth() {
+                const geometry = new THREE.SphereGeometry(2, 64, 64);
+                
+                // Create Earth texture
+                const canvas = document.createElement('canvas');
+                canvas.width = 512;
+                canvas.height = 256;
+                const ctx = canvas.getContext('2d');
+                
+                // Create gradient for Earth
+                const gradient = ctx.createRadialGradient(256, 128, 0, 256, 128, 256);
+                gradient.addColorStop(0, '#0EA5E9');
+                gradient.addColorStop(0.7, '#22C55E');
+                gradient.addColorStop(1, '#FBBF24');
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 512, 256);
+                
+                // Add some texture
+                ctx.fillStyle = 'rgba(34, 197, 94, 0.3)';
+                for (let i = 0; i < 100; i++) {
+                    const x = Math.random() * 512;
+                    const y = Math.random() * 256;
+                    const size = Math.random() * 20 + 5;
+                    ctx.beginPath();
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                const texture = new THREE.CanvasTexture(canvas);
+                const material = new THREE.MeshPhongMaterial({
+                    map: texture,
+                    shininess: 0.1,
+                    transparent: true
+                });
+                
+                this.earth = new THREE.Mesh(geometry, material);
+                this.earth.castShadow = true;
+                this.earth.receiveShadow = true;
+                this.scene.add(this.earth);
+                
+                // Add atmosphere
+                const atmosphereGeometry = new THREE.SphereGeometry(2.05, 32, 32);
+                const atmosphereMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x0284C7,
+                    transparent: true,
+                    opacity: 0.1
+                });
+                const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+                this.scene.add(atmosphere);
+            }
+
+            setupControls() {
+                this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+                this.controls.enableDamping = true;
+                this.controls.dampingFactor = 0.1;
+                this.controls.enableZoom = true;
+                this.controls.enableRotate = true;
+                this.controls.enablePan = false;
+                this.controls.autoRotate = true;
+                this.controls.autoRotateSpeed = 0.5;
+            }
+
+            animate() {
+                if (this.isAnimating) {
+                    requestAnimationFrame(() => this.animate());
+                }
+                
+                if (this.earth && this.controls) {
+                    this.earth.rotation.y += 0.002;
+                    this.controls.update();
+                }
+                
+                this.renderer.render(this.scene, this.camera);
+            }
+
+            setYear(year) {
+                this.currentYear = year;
+                this.updateVisualization();
+            }
+
+            setLayer(layer) {
+                this.currentLayer = layer;
+                this.updateVisualization();
+            }
+
+            updateVisualization() {
+                if (!this.earth) return;
+                
+                const material = this.earth.material;
+                const canvas = material.map.image;
+                const ctx = canvas.getContext('2d');
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Base Earth colors
+                let color1, color2, color3;
+                
+                if (this.currentLayer === 'vegetation') {
+                    color1 = '#0EA5E9'; // Ocean
+                    color2 = '#22C55E'; // Vegetation
+                    color3 = '#16A34A'; // Dense vegetation
+                } else if (this.currentLayer === 'desertification') {
+                    color1 = '#0EA5E9'; // Ocean  
+                    color2 = '#FBBF24'; // Desert
+                    color3 = '#F59E0B'; // Severe desert
+                } else {
+                    color1 = '#0EA5E9'; // Ocean
+                    color2 = '#22C55E'; // Vegetation
+                    color3 = '#FBBF24'; // Desert
+                }
+                
+                // Create base gradient
+                const gradient = ctx.createRadialGradient(256, 128, 0, 256, 128, 256);
+                gradient.addColorStop(0, color1);
+                gradient.addColorStop(0.7, color2);
+                gradient.addColorStop(1, color3);
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Add random patches based on current year
+                const yearOffset = (this.currentYear - 2000) * 5;
+                ctx.fillStyle = color2;
+                for (let i = 0; i < 50 + yearOffset; i++) {
+                    const x = Math.random() * canvas.width;
+                    const y = Math.random() * canvas.height;
+                    const size = Math.random() * 30 + 10;
+                    ctx.beginPath();
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // Update texture
+                material.map.needsUpdate = true;
+            }
+
+            setupEventListeners() {
+                window.addEventListener('resize', () => this.onWindowResize());
+            }
+
+            onWindowResize() {
+                const container = this.renderer.domElement.parentElement;
+                this.camera.aspect = container.offsetWidth / container.offsetHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(container.offsetWidth, container.offsetHeight);
+            }
+        }
+
+        // ===== AI Predictions Engine =====
+        class AIPredictionsEngine {
+            constructor() {
+                this.models = {
+                    vegetation: { accuracy: 0.94, type: 'Random Forest' },
+                    desertification: { accuracy: 0.89, type: 'Gradient Boosting' }
+                };
+            }
+
+            predictVegetationGrowth(currentData, yearsAhead = 10) {
+                const predictions = [];
+                let trend = 1;
+                
+                for (let i = 0; i < yearsAhead; i++) {
+                    const randomFactor = 0.95 + Math.random() * 0.1;
+                    const climateFactor = 0.98 + (Math.sin(i * 0.5) * 0.02);
+                    trend *= randomFactor * climateFactor;
+                    
+                    predictions.push({
+                        year: 2025 + i,
+                        growth: Math.max(0, (currentData + i * 2) * trend),
+                        confidence: this.models.vegetation.accuracy,
+                        factors: ['Climate', 'Rainfall', 'Human Activity', 'Technology']
+                    });
+                }
+                
+                return predictions;
+            }
+
+            predictDesertificationRisk(currentData, yearsAhead = 10) {
+                const predictions = [];
+                let trend = 1;
+                
+                for (let i = 0; i < yearsAhead; i++) {
+                    const randomFactor = 1.02 + Math.random() * 0.05;
+                    const climateFactor = 1.01 + (Math.cos(i * 0.3) * 0.01);
+                    trend *= randomFactor * climateFactor;
+                    
+                    predictions.push({
+                        year: 2025 + i,
+                        risk: Math.min(100, (currentData + i * 1.5) * trend),
+                        confidence: this.models.desertification.accuracy,
+                        factors: ['Temperature Rise', 'Drought', 'Deforestation', 'Overgrazing']
+                    });
+                }
+                
+                return predictions;
+            }
+
+            getModelAccuracy() {
+                return {
+                    vegetation: this.models.vegetation.accuracy * 100,
+                    desertification: this.models.desertification.accuracy * 100
+                };
+            }
+        }
+
+        // ===== Data Manager =====
+        class DataManager {
+            constructor() {
+                this.cache = new Map();
+                this.sources = ['nasa', 'copernicus', 'gee'];
+                this.currentSource = 'nasa';
+            }
+
+            async fetchData(year, bounds, layer) {
+                const cacheKey = `${year}-${bounds.north}-${bounds.south}-${bounds.east}-${bounds.west}-${layer}`;
+                
+                if (this.cache.has(cacheKey)) {
+                    return this.cache.get(cacheKey);
+                }
+
+                // Simulate API call with realistic data
+                const data = this.generateMockData(year, bounds, layer);
+                this.cache.set(cacheKey, data);
+                
+                return data;
+            }
+
+            generateMockData(year, bounds, layer) {
+                const dataPoints = [];
+                const density = 100;
+                
+                for (let i = 0; i < density; i++) {
+                    const lat = bounds.south + Math.random() * (bounds.north - bounds.south);
+                    const lon = bounds.west + Math.random() * (bounds.east - bounds.west);
+                    
+                    let value;
+                    if (layer === 'vegetation') {
+                        // Higher values in tropics, lower in deserts
+                        const equatorFactor = 1 - Math.abs(lat) / 90;
+                        const randomFactor = 0.8 + Math.random() * 0.4;
+                        value = Math.max(0, Math.min(100, 60 * equatorFactor * randomFactor));
+                        
+                        // Add year-based trend
+                        const yearFactor = (year - 2000) / 25;
+                        value *= (0.9 + yearFactor * 0.2);
+                        
+                    } else if (layer === 'desertification') {
+                        // Higher values in arid regions
+                        const desertFactor = Math.abs(lat) > 30 ? 1.5 : 0.8;
+                        const randomFactor = 0.5 + Math.random() * 0.5;
+                        value = Math.max(0, Math.min(100, 30 * desertFactor * randomFactor));
+                        
+                        // Add year-based trend (increasing)
+                        const yearFactor = (year - 2000) / 25;
+                        value *= (1 + yearFactor * 0.3);
+                    } else {
+                        // Combined layer
+                        const vegValue = this.generateVegetationValue(lat, year);
+                        const desertValue = this.generateDesertValue(lat, year);
+                        value = Math.max(vegValue, desertValue);
+                    }
+                    
+                    dataPoints.push({
+                        lat: lat,
+                        lon: lon,
+                        value: Math.round(value * 100) / 100,
+                        timestamp: new Date(year, 0, 1).toISOString(),
+                        source: this.currentSource
+                    });
+                }
+                
+                return {
+                    data: dataPoints,
+                    metadata: {
+                        year: year,
+                        bounds: bounds,
+                        layer: layer,
+                        source: this.currentSource,
+                        count: dataPoints.length,
+                        timestamp: new Date().toISOString()
+                    }
+                };
+            }
+
+            generateVegetationValue(lat, year) {
+                const equatorFactor = 1 - Math.abs(lat) / 90;
+                const randomFactor = 0.8 + Math.random() * 0.4;
+                const yearFactor = (year - 2000) / 25;
+                return Math.max(0, 60 * equatorFactor * randomFactor * (0.9 + yearFactor * 0.2));
+            }
+
+            generateDesertValue(lat, year) {
+                const desertFactor = Math.abs(lat) > 30 ? 1.5 : 0.8;
+                const randomFactor = 0.5 + Math.random() * 0.5;
+                const yearFactor = (year - 2000) / 25;
+                return Math.max(0, 30 * desertFactor * randomFactor * (1 + yearFactor * 0.3));
+            }
+
+            getStatistics() {
+                return {
+                    vegetation: {
+                        coverage: 78.2 + (Math.random() - 0.5) * 2,
+                        change: (Math.random() - 0.3) * 4,
+                        trend: 'increasing'
+                    },
+                    desertification: {
+                        risk: 34.7 + (Math.random() - 0.5) * 3,
+                        change: (Math.random() - 0.2) * 3,
+                        trend: 'stabilizing'
+                    },
+                    dataPoints: (2.4 + Math.random() * 0.2).toFixed(1) + 'M',
+                    aiAccuracy: 94 + Math.floor(Math.random() * 3)
+                };
+            }
+        }
+
+        // ===== Main Application =====
+        class EarthMonitoringApp {
+            constructor() {
+                this.currentSection = 'home';
+                this.currentLayer = 'vegetation';
+                this.currentYear = 2025;
+                this.isPlaying = false;
+                this.animationSpeed = 1;
+                
+                this.globe = null;
+                this.languageManager = null;
+                this.aiEngine = null;
+                this.dataManager = null;
+                
+                this.init();
+            }
+
+            init() {
+                console.log('Initializing Earth Monitoring App...');
+                
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => this.setupApp());
+                } else {
+                    this.setupApp();
+                }
+            }
+
+            async setupApp() {
+                try {
+                    // Initialize components
+                    this.languageManager = new LanguageManager();
+                    this.aiEngine = new AIPredictionsEngine();
+                    this.dataManager = new DataManager();
+                    this.globe = new GlobeRenderer();
+                    
+                    // Setup event listeners
+                    this.setupEventListeners();
+                    this.setupControls();
+                    
+                    // Load initial data
+                    await this.loadInitialData();
+                    
+                    // Start animations
+                    this.startAnimations();
+                    
+                    console.log('Earth Monitoring App initialized successfully');
+                } catch (error) {
+                    console.error('Error initializing app:', error);
+                    this.showError('فشل في تحميل التطبيق. يرجى إعادة المحاولة.');
+                }
+            }
+
+            setupEventListeners() {
+                // Navigation
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const section = e.target.dataset.section;
+                        this.switchSection(section);
+                    });
+                });
+
+                // Layer controls
+                document.querySelectorAll('.control-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const layer = e.target.closest('.control-btn').dataset.layer;
+                        this.switchLayer(layer);
+                    });
+                });
+
+                // Time controls
+                const timeSlider = document.getElementById('timeSlider');
+                if (timeSlider) {
+                    timeSlider.addEventListener('input', (e) => {
+                        this.setYear(parseInt(e.target.value));
+                    });
+                }
+
+                const playBtn = document.getElementById('playBtn');
+                const pauseBtn = document.getElementById('pauseBtn');
+                
+                if (playBtn) {
+                    playBtn.addEventListener('click', () => this.playAnimation());
+                }
+                
+                if (pauseBtn) {
+                    pauseBtn.addEventListener('click', () => this.pauseAnimation());
+                }
+
+                // Speed controls
+                document.querySelectorAll('.speed-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const speed = parseFloat(e.target.dataset.speed);
+                        this.setSpeed(speed);
+                    });
+                });
+
+                // Data source controls
+                document.querySelectorAll('.source-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        const source = e.currentTarget.dataset.source;
+                        this.switchDataSource(source);
+                    });
+                });
+
+                // Prediction controls
+                document.querySelectorAll('.prediction-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const pred = e.target.closest('.prediction-btn').dataset.pred;
+                        this.switchPrediction(pred);
+                    });
+                });
+
+                // Settings
+                const settingsBtn = document.getElementById('settingsBtn');
+                if (settingsBtn) {
+                    settingsBtn.addEventListener('click', () => this.showSettings());
+                }
+            }
+
+            setupControls() {
+                // Update time display
+                this.updateTimeDisplay();
+                
+                // Initialize statistics
+                this.updateStatistics();
+            }
+
+            async loadInitialData() {
+                try {
+                    // Load initial year data
+                    const bounds = { north: 90, south: -90, east: 180, west: -180 };
+                    await this.dataManager.fetchData(this.currentYear, bounds, this.currentLayer);
+                    
+                    // Initial AI predictions
+                    this.loadPredictions();
+                    
+                } catch (error) {
+                    console.error('Error loading initial data:', error);
+                }
+            }
+
+            switchSection(section) {
+                this.currentSection = section;
+                
+                // Update nav buttons
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.section === section) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                console.log(`Switched to section: ${section}`);
+            }
+
+            switchLayer(layer) {
+                this.currentLayer = layer;
+                
+                // Update layer buttons
+                document.querySelectorAll('.control-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.layer === layer) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                // Update globe
+                if (this.globe) {
+                    this.globe.setLayer(layer);
+                }
+                
+                console.log(`Switched to layer: ${layer}`);
+            }
+
+            setYear(year) {
+                this.currentYear = year;
+                this.updateTimeDisplay();
+                
+                // Update globe
+                if (this.globe) {
+                    this.globe.setYear(year);
+                }
+                
+                // Load data for new year
+                this.loadYearData(year);
+            }
+
+            playAnimation() {
+                this.isPlaying = true;
+                
+                // Update buttons
+                document.getElementById('playBtn').style.display = 'none';
+                document.getElementById('pauseBtn').style.display = 'flex';
+                
+                // Start year animation
+                this.animateYears();
+            }
+
+            pauseAnimation() {
+                this.isPlaying = false;
+                
+                // Update buttons
+                document.getElementById('playBtn').style.display = 'flex';
+                document.getElementById('pauseBtn').style.display = 'none';
+            }
+
+            setSpeed(speed) {
+                this.animationSpeed = speed;
+                
+                // Update speed buttons
+                document.querySelectorAll('.speed-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (parseFloat(btn.dataset.speed) === speed) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                console.log(`Animation speed set to: ${speed}x`);
+            }
+
+            switchDataSource(source) {
+                this.dataManager.currentSource = source;
+                
+                // Update source buttons
+                document.querySelectorAll('.source-item').forEach(item => {
+                    item.classList.remove('active');
+                    if (item.dataset.source === source) {
+                        item.classList.add('active');
+                    }
+                });
+                
+                console.log(`Switched to data source: ${source}`);
+            }
+
+            switchPrediction(pred) {
+                // Update prediction buttons
+                document.querySelectorAll('.prediction-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.pred === pred) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                // Update accuracy display
+                const accuracies = this.aiEngine.getModelAccuracy();
+                const accuracy = pred === 'vegetation' ? accuracies.vegetation : accuracies.desertification;
+                
+                const accuracyFill = document.querySelector('.accuracy-fill');
+                if (accuracyFill) {
+                    accuracyFill.style.width = `${accuracy}%`;
+                }
+                
+                const accuracyText = document.querySelector('.accuracy-text');
+                if (accuracyText) {
+                    accuracyText.textContent = `دقة التوقع: ${accuracy}%`;
+                }
+                
+                console.log(`Switched to prediction: ${pred}`);
+            }
+
+            updateTimeDisplay() {
+                const currentYearElement = document.getElementById('currentYear');
+                if (currentYearElement) {
+                    currentYearElement.textContent = this.currentYear;
+                }
+                
+                const timeSlider = document.getElementById('timeSlider');
+                if (timeSlider) {
+                    timeSlider.value = this.currentYear;
+                }
+            }
+
+            updateStatistics() {
+                const stats = this.dataManager.getStatistics();
+                
+                // Update vegetation coverage
+                const vegCoverage = document.getElementById('vegetationCoverage');
+                if (vegCoverage) {
+                    vegCoverage.textContent = stats.vegetation.coverage.toFixed(1) + '%';
+                }
+                
+                // Update desertification risk
+                const desertRisk = document.getElementById('desertificationRisk');
+                if (desertRisk) {
+                    desertRisk.textContent = stats.desertification.risk.toFixed(1) + '%';
+                }
+                
+                // Update data points
+                const dataPoints = document.getElementById('dataPoints');
+                if (dataPoints) {
+                    dataPoints.textContent = stats.dataPoints;
+                }
+                
+                // Update AI accuracy
+                const aiAccuracy = document.getElementById('aiAccuracy');
+                if (aiAccuracy) {
+                    aiAccuracy.textContent = stats.aiAccuracy + '%';
+                }
+            }
+
+            async loadYearData(year) {
+                try {
+                    const bounds = { north: 90, south: -90, east: 180, west: -180 };
+                    await this.dataManager.fetchData(year, bounds, this.currentLayer);
+                    
+                    // Update statistics
+                    this.updateStatistics();
+                    
+                } catch (error) {
+                    console.error('Error loading year data:', error);
+                }
+            }
+
+            loadPredictions() {
+                const vegetationData = 78.2;
+                const desertificationData = 34.7;
+                
+                const vegetationPredictions = this.aiEngine.predictVegetationGrowth(vegetationData);
+                const desertificationPredictions = this.aiEngine.predictDesertificationRisk(desertificationData);
+                
+                console.log('AI Predictions loaded:', {
+                    vegetation: vegetationPredictions,
+                    desertification: desertificationPredictions
+                });
+            }
+
+            animateYears() {
+                if (!this.isPlaying) return;
+                
+                let targetYear = this.currentYear + 1;
+                if (targetYear > 2035) targetYear = 2000;
+                
+                this.setYear(targetYear);
+                
+                const interval = 1000 / this.animationSpeed;
+                setTimeout(() => this.animateYears(), interval);
+            }
+
+            startAnimations() {
+                // Auto-update statistics every 30 seconds
+                setInterval(() => {
+                    this.updateStatistics();
+                }, 30000);
+                
+                // Auto-animate years every 5 seconds if playing
+                if (this.isPlaying) {
+                    this.animateYears();
+                }
+            }
+
+            showSettings() {
+                alert('إعدادات التطبيق - قريباً!');
+            }
+
+            showError(message) {
+                console.error(message);
+                alert(message);
+            }
+        }
+
+        // ===== Initialize App =====
+        document.addEventListener('DOMContentLoaded', () => {
+            // Create global app instance
+            window.earthApp = new EarthMonitoringApp();
+            
+            // Initialize Lucide icons
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+            
+            console.log('🌍 Earth Monitoring System loaded successfully!');
+        });
+
+        // ===== Utility Functions =====
+        function updateInfoPanel(data) {
+            const panel = document.getElementById('infoPanel');
+            const locationInfo = document.getElementById('locationInfo');
+            const vegetationInfo = document.getElementById('vegetationInfo');
+            const desertificationInfo = document.getElementById('desertificationInfo');
+            const changeInfo = document.getElementById('changeInfo');
+            
+            if (panel && locationInfo && vegetationInfo && desertificationInfo && changeInfo) {
+                locationInfo.textContent = `${data.lat.toFixed(2)}°, ${data.lon.toFixed(2)}°`;
+                vegetationInfo.textContent = `${data.vegetation.toFixed(1)}%`;
+                desertificationInfo.textContent = `${data.desertification.toFixed(1)}%`;
+                changeInfo.textContent = `${data.change > 0 ? '+' : ''}${data.change.toFixed(1)}%`;
+                
+                panel.style.display = 'block';
+            }
+        }
+
+        // Handle globe clicks
+        document.addEventListener('click', (event) => {
+            if (event.target.closest('#globeCanvas')) {
+                // Simulate region info on click
+                const mockData = {
+                    lat: (Math.random() - 0.5) * 180,
+                    lon: (Math.random() - 0.5) * 360,
+                    vegetation: Math.random() * 100,
+                    desertification: Math.random() * 100,
+                    change: (Math.random() - 0.5) * 10
+                };
+                
+                updateInfoPanel(mockData);
+            } else {
+                // Hide info panel if clicking elsewhere
+                const panel = document.getElementById('infoPanel');
+                if (panel && !event.target.closest('.globe-info-panel')) {
+                    panel.style.display = 'none';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
